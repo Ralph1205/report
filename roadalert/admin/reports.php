@@ -65,7 +65,7 @@ $result = $conn->query($sql);
 <header class="navbar">
 
     <div class="logo">
-        Road<span>Alert</span> + FuelTrack
+        Road<span>Alert</span>
     </div>
 
     <div class="nav-links">

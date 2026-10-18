@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title>RoadAlert + FuelTrack</title>
+    <title>RoadAlert</title>
 
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
@@ -15,7 +15,7 @@
 <header class="navbar">
 
     <div class="logo">
-        Road<span>Alert</span> + FuelTrack
+        Road<span>Alert</span>
     </div>
 
     <div class="nav-links">
@@ -31,7 +31,7 @@
 
     <section class="hero">
 
-        <p>ROAD SAFETY + FUEL MANAGEMENT</p>
+        <p>ROAD SAFETY</p>
 
         <h1>
             Know the road.<br>
@@ -39,9 +39,7 @@
         </h1>
 
         <p>
-            RoadAlert helps drivers report road hazards
-            while FuelTrack helps monitor vehicle fuel usage,
-            efficiency, and cost.
+            RoadAlert helps drivers spot, report, and dodge road hazards in real time.
         </p>
 
         <br>
@@ -71,16 +69,7 @@
         </div>
 
 
-        <div class="card">
 
-            <h2>⛽ FuelTrack</h2>
-
-            <p>
-                Record fuel usage and automatically
-                calculate km/L and fuel cost.
-            </p>
-
-        </div>
 
 
         <div class="card">

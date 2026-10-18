@@ -31,7 +31,7 @@ if (
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>Dashboard - RoadAlert + FuelTrack</title>
+    <title>Dashboard - RoadAlert</title>
 
     <link
         rel="stylesheet"
@@ -50,7 +50,7 @@ if (
         <div class="hero-content">
 
             <p class="hero-label">
-                WELCOME TO ROADALERT + FUELTRACK
+                WELCOME TO ROADALERT
             </p>
 
             <h1>
@@ -61,8 +61,7 @@ if (
             </h1>
 
             <p class="hero-description">
-                Monitor road conditions and track your vehicle's
-                fuel usage in one system.
+                Monitor road conditions by reporting road hazard
             </p>
 
         </div>
@@ -128,68 +127,6 @@ if (
         </div>
 
 
-        <!-- FUELTRACK -->
-        <div class="card">
-
-            <div class="card-icon">
-                ⛽
-            </div>
-
-            <h2>
-                FuelTrack
-            </h2>
-
-            <p>
-                Record fuel usage and monitor your vehicle's
-                fuel efficiency and cost.
-            </p>
-
-            <div class="button-group">
-
-                <a
-                    href="fuel.php"
-                    class="btn"
-                >
-                    Record Fuel
-                </a>
-
-                <a
-                    href="fuel_history.php"
-                    class="btn btn-secondary"
-                >
-                    Fuel History
-                </a>
-
-            </div>
-
-        </div>
-
-
-        <!-- MY VEHICLES -->
-        <div class="card">
-
-            <div class="card-icon">
-                🚗
-            </div>
-
-            <h2>
-                My Vehicles
-            </h2>
-
-            <p>
-                Register and manage your vehicles
-                for FuelTrack.
-            </p>
-
-            <a
-                href="vehicle.php"
-                class="btn"
-            >
-                Manage Vehicles
-            </a>
-
-        </div>
-
 
         <!-- HISTORY -->
         <div class="card">
@@ -216,13 +153,6 @@ if (
                     Road History
                 </a>
 
-                <a
-                    href="fuel_history.php"
-                    class="btn btn-secondary"
-                >
-                    Fuel History
-                </a>
-
             </div>
 
         </div>
@@ -240,7 +170,8 @@ if (
             </h2>
 
             <p>
-                Finished using RoadAlert + FuelTrack?
+                Finished using RoadAlert?
+
                 You can safely log out of your account.
             </p>
 

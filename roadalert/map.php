@@ -70,7 +70,7 @@ while ($row = $result->fetch_assoc()) {
 <header class="navbar">
 
     <div class="logo">
-        Road<span>Alert</span> + FuelTrack
+        Road<span>Alert</span>
     </div>
 
     <div class="nav-links">
@@ -85,10 +85,6 @@ while ($row = $result->fetch_assoc()) {
 
         <a href="map.php">
             Road Map
-        </a>
-
-        <a href="fuel.php">
-            FuelTrack
         </a>
 
         <a href="logout.php">

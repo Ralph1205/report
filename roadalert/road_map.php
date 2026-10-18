@@ -104,7 +104,7 @@ $reports_json = json_encode(
     >
 
     <title>
-        Road Map - RoadAlert + FuelTrack
+        Road Map - RoadAlert
     </title>
 
     <link
@@ -174,7 +174,7 @@ $reports_json = json_encode(
 
         .map-legend {
 
-            background: white;
+            background: black;
 
             padding: 18px;
 
@@ -315,7 +315,7 @@ $reports_json = json_encode(
 
     <div class="logo">
 
-        Road<span>Alert</span> + FuelTrack
+        Road<span>Alert</span>
 
     </div>
 
@@ -331,14 +331,6 @@ $reports_json = json_encode(
 
         <a href="road_map.php">
             Road Map
-        </a>
-
-        <a href="vehicle.php">
-            My Vehicles
-        </a>
-
-        <a href="fuel.php">
-            FuelTrack
         </a>
 
         <a href="history.php">

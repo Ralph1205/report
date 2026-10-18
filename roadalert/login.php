@@ -205,7 +205,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     >
 
     <title>
-        Login - RoadAlert + FuelTrack
+        Login - RoadAlert
     </title>
 
     <link
@@ -227,7 +227,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     <div class="logo">
 
-        Road<span>Alert</span> + FuelTrack
+        Road<span>Alert</span>
 
     </div>
 
@@ -262,7 +262,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
 
         <p>
-            Sign in to your RoadAlert + FuelTrack account.
+            Sign in to your RoadAlert
         </p>
 
 

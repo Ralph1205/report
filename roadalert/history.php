@@ -73,7 +73,7 @@ $result = $stmt->get_result();
     >
 
     <title>
-        History - RoadAlert + FuelTrack
+        History - RoadAlert
     </title>
 
     <link
@@ -90,7 +90,7 @@ $result = $stmt->get_result();
 <header class="navbar">
 
     <div class="logo">
-        Road<span>Alert</span> + FuelTrack
+        Road<span>Alert</span>
     </div>
 
 
@@ -104,9 +104,6 @@ $result = $stmt->get_result();
             Report Hazard
         </a>
 
-        <a href="fuel.php">
-            FuelTrack
-        </a>
 
         <a href="history.php">
             History
