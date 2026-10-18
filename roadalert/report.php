@@ -226,7 +226,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <header class="navbar">
 
     <div class="logo">
-        Road<span>Alert</span> + FuelTrack
+        Road<span>Alert</span>
     </div>
 
     <div class="nav-links">
@@ -239,9 +239,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             Report Hazard
         </a>
 
-        <a href="fuel.php">
-            FuelTrack
-        </a>
 
         <a href="history.php">
             History
