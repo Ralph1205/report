@@ -79,6 +79,8 @@ $admin_name = $_SESSION["full_name"] ?? "Admin";
 
         body {
             margin: 0;
+            background: #f3f7f8;
+            color: #183238;
         }
 
         /* HEADER */
@@ -87,26 +89,30 @@ $admin_name = $_SESSION["full_name"] ?? "Admin";
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 18px 5%;
+            padding: 16px 5%;
+            background: #ffffff;
+            border-bottom: 1px solid #dce7e9;
         }
 
         .brand {
+            color: #087e8b;
             text-decoration: none;
-            font-size: 24px;
-            font-weight: bold;
+            font-size: 25px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
         }
 
-        /* LOGOUT BUTTON */
-
         .logout-btn {
-            display: inline-block;
-            padding: 10px 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 19px;
             background: #087f8c;
             color: #ffffff;
             text-decoration: none;
-            font-weight: 600;
+            font-weight: 700;
             font-size: 14px;
-            border-radius: 7px;
+            border-radius: 8px;
             transition: background 0.2s ease;
         }
 
@@ -117,124 +123,155 @@ $admin_name = $_SESSION["full_name"] ?? "Admin";
         /* MAIN LAYOUT */
 
         .dashboard-container {
-            width: min(1200px, 92%);
-            margin: 35px auto 60px;
+            width: min(1100px, 92%);
+            margin: 35px auto 55px;
         }
 
-        /* WELCOME SECTION */
+        /* WELCOME BANNER */
 
         .dashboard-welcome {
             display: grid;
-            grid-template-columns: 1fr 2fr;
+            grid-template-columns: 1fr 1.5fr;
             align-items: center;
-            gap: 25px;
+            gap: 35px;
             padding: 35px;
-            margin-bottom: 30px;
-            border-radius: 15px;
-
-            background: linear-gradient(
-                120deg,
-                #075f68,
-                #0799a1
-            );
-
+            margin-bottom: 35px;
+            border-radius: 16px;
+            background: linear-gradient(120deg, #075f68, #0799a1);
             color: #ffffff;
-            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 10px 25px rgba(8, 126, 139, 0.14);
         }
 
         .welcome-label {
-            font-size: 13px;
-            font-weight: bold;
+            font-size: 12px;
+            font-weight: 800;
             letter-spacing: 1.5px;
-            margin-bottom: 10px;
+            margin: 0 0 10px;
+            color: #d7f7f8;
         }
 
         .dashboard-welcome h1 {
-            font-size: clamp(25px, 3vw, 36px);
+            font-size: clamp(27px, 3vw, 36px);
             line-height: 1.25;
             margin: 0;
+            overflow-wrap: anywhere;
         }
 
         .dashboard-welcome h1 span {
             display: block;
-            overflow-wrap: anywhere;
         }
 
         .welcome-description {
             font-size: 15px;
             line-height: 1.8;
             margin: 0;
+            color: #efffff;
         }
 
         /* SECTION HEADINGS */
 
         .section-heading {
-            margin: 35px 0 18px;
+            margin: 0 0 18px;
         }
 
         .section-heading h2 {
-            margin: 0 0 6px;
-            font-size: 22px;
+            margin: 0 0 5px;
+            font-size: 23px;
+            color: #183238;
         }
 
         .section-heading p {
             margin: 0;
             font-size: 14px;
-            color: #5f6b70;
+            color: #6b8085;
         }
 
         /* FEATURE CARDS */
 
         .dashboard-features {
             display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 22px;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 24px;
+            margin-bottom: 38px;
         }
 
         .feature-card {
             display: flex;
             flex-direction: column;
             align-items: flex-start;
-            padding: 25px;
+            min-width: 0;
             min-height: 235px;
-
+            padding: 28px;
             background: #ffffff;
-            border: 1px solid #d8e5e8;
-            border-radius: 13px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.035);
-
-            transition: transform 0.2s ease,
-                        box-shadow 0.2s ease;
+            border: 1px solid #dce7e9;
+            border-radius: 15px;
+            box-shadow: 0 5px 18px rgba(24, 50, 56, 0.04);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
         .feature-card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 12px 28px rgba(24, 50, 56, 0.09);
         }
 
         .feature-icon {
-            font-size: 28px;
-            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 54px;
+            height: 54px;
+            margin-bottom: 17px;
+            border-radius: 14px;
+            background: #e6f5f6;
+            font-size: 27px;
         }
 
         .feature-card h3 {
-            font-size: 18px;
-            margin: 0 0 10px;
+            font-size: 19px;
+            margin: 0 0 9px;
+            color: #183238;
         }
 
         .feature-card p {
-            color: #5f6b70;
+            color: #6b8085;
             font-size: 14px;
             line-height: 1.7;
             margin: 0 0 22px;
         }
 
         .feature-card .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             margin-top: auto;
+            padding: 11px 19px;
+            border-radius: 8px;
+            background: #087e8b;
+            color: #ffffff;
+            font-size: 14px;
+            font-weight: 700;
             text-decoration: none;
+            transition: background 0.2s ease;
         }
 
-        /* STATISTICS */
+        .feature-card .btn:hover {
+            background: #06616b;
+        }
+
+        .feature-card .btn-secondary {
+            background: #e6f5f6;
+            color: #06616b;
+        }
+
+        .feature-card .btn-secondary:hover {
+            background: #d0ecee;
+        }
+
+        /* REPORT STATISTICS */
+
+        .statistics-section {
+            margin-top: 5px;
+        }
 
         .dashboard-stats {
             display: grid;
@@ -243,78 +280,102 @@ $admin_name = $_SESSION["full_name"] ?? "Admin";
         }
 
         .dashboard-stat {
-            padding: 22px;
-            border: 1px solid #d8e5e8;
-            border-radius: 12px;
+            min-width: 0;
+            padding: 23px;
             background: #ffffff;
+            border: 1px solid #dce7e9;
+            border-top: 4px solid #087f8c;
+            border-radius: 12px;
+            box-shadow: 0 4px 14px rgba(24, 50, 56, 0.025);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .dashboard-stat:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(24, 50, 56, 0.06);
         }
 
         .dashboard-stat h3 {
             font-size: 14px;
             font-weight: 600;
             color: #536168;
-            margin: 0 0 12px;
+            margin: 0 0 10px;
         }
 
         .dashboard-stat strong {
             display: block;
             font-size: 32px;
             line-height: 1.2;
+            color: #183238;
         }
 
         .stat-total {
-            border-top: 4px solid #087f8c;
+            border-top-color: #087f8c;
         }
 
         .stat-pending {
-            border-top: 4px solid #d9a227;
+            border-top-color: #d9a227;
         }
 
         .stat-verified {
-            border-top: 4px solid #27966b;
+            border-top-color: #27966b;
         }
 
         .stat-resolved {
-            border-top: 4px solid #77858b;
+            border-top-color: #77858b;
         }
 
         .stat-construction {
-            border-top: 4px solid #3488c7;
+            border-top-color: #3488c7;
         }
 
         .stat-closed {
-            border-top: 4px solid #cf5151;
+            border-top-color: #cf5151;
         }
 
         /* RESPONSIVE DESIGN */
 
-        @media (max-width: 850px) {
+        @media (max-width: 750px) {
+            .dashboard-welcome {
+                grid-template-columns: 1fr;
+                gap: 16px;
+                padding: 28px;
+            }
+
             .dashboard-features {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 16px;
             }
 
             .dashboard-stats {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
-
-            .dashboard-welcome {
-                grid-template-columns: 1fr;
-                gap: 18px;
-            }
         }
 
-        @media (max-width: 550px) {
-            .dashboard-container {
-                width: 92%;
-                margin-top: 22px;
+        @media (max-width: 520px) {
+            .topbar {
+                padding: 15px 4%;
             }
 
-            .topbar {
-                padding: 16px 4%;
+            .brand {
+                font-size: 23px;
+            }
+
+            .logout-btn {
+                padding: 9px 13px;
+            }
+
+            .dashboard-container {
+                width: 92%;
+                margin: 24px auto 35px;
             }
 
             .dashboard-welcome {
-                padding: 25px 22px;
+                padding: 24px 21px;
+                margin-bottom: 28px;
+            }
+
+            .dashboard-welcome h1 {
+                font-size: 27px;
             }
 
             .dashboard-features,
@@ -324,14 +385,11 @@ $admin_name = $_SESSION["full_name"] ?? "Admin";
 
             .feature-card {
                 min-height: auto;
+                padding: 23px;
             }
 
             .dashboard-stat {
-                padding: 18px;
-            }
-
-            .logout-btn {
-                padding: 9px 14px;
+                padding: 20px;
             }
         }
     </style>
@@ -342,7 +400,6 @@ $admin_name = $_SESSION["full_name"] ?? "Admin";
     <!-- HEADER -->
 
     <header class="topbar">
-
         <a class="brand" href="dashboard.php">
             Road<span>Alert</span>
         </a>
@@ -350,7 +407,6 @@ $admin_name = $_SESSION["full_name"] ?? "Admin";
         <a href="../logout.php" class="logout-btn">
             Logout
         </a>
-
     </header>
 
     <main class="dashboard-container">
@@ -358,7 +414,6 @@ $admin_name = $_SESSION["full_name"] ?? "Admin";
         <!-- WELCOME BANNER -->
 
         <section class="dashboard-welcome">
-
             <div>
                 <p class="welcome-label">ROADALERT ADMINISTRATION</p>
 
@@ -375,16 +430,15 @@ $admin_name = $_SESSION["full_name"] ?? "Admin";
             </div>
 
             <p class="welcome-description">
-                Manage submitted road hazard reports, monitor report
-                statuses, and view reported hazards on the interactive map.
+                Manage submitted road hazard reports, update their
+                statuses, and locate reported hazards using the
+                interactive road hazard map.
             </p>
-
         </section>
 
-        <!-- DASHBOARD FEATURES -->
+        <!-- DASHBOARD FEATURES: ROAD REPORTS CARD REMOVED -->
 
         <section>
-
             <div class="section-heading">
                 <h2>Dashboard Overview</h2>
                 <p>Choose a section to manage and monitor road hazards.</p>
@@ -392,20 +446,24 @@ $admin_name = $_SESSION["full_name"] ?? "Admin";
 
             <div class="dashboard-features">
 
+                <!-- MANAGE REPORTS -->
+
                 <article class="feature-card">
                     <div class="feature-icon">🚧</div>
 
                     <h3>Manage Reports</h3>
 
                     <p>
-                        Review submitted road hazards and update their
-                        status as reports are processed.
+                        Review reports submitted by residents, inspect
+                        hazard details, and update report statuses.
                     </p>
 
                     <a href="reports.php" class="btn">
-                        View Reports
+                        Manage Reports
                     </a>
                 </article>
+
+                <!-- ROAD HAZARD MAP -->
 
                 <article class="feature-card">
                     <div class="feature-icon">🗺️</div>
@@ -417,33 +475,17 @@ $admin_name = $_SESSION["full_name"] ?? "Admin";
                         locations on the interactive map.
                     </p>
 
-                    <a href="map.php" class="btn">
+                    <a href="map.php" class="btn btn-secondary">
                         Open Map
                     </a>
                 </article>
 
-                <article class="feature-card">
-                    <div class="feature-icon">📋</div>
-
-                    <h3>Road Reports</h3>
-
-                    <p>
-                        View submitted reports and check their current
-                        status in one place.
-                    </p>
-
-                    <a href="reports.php" class="btn btn-secondary">
-                        View All Reports
-                    </a>
-                </article>
-
             </div>
-
         </section>
 
         <!-- REPORT STATISTICS -->
 
-        <section>
+        <section class="statistics-section">
 
             <div class="section-heading">
                 <h2>Report Statistics</h2>
@@ -485,7 +527,6 @@ $admin_name = $_SESSION["full_name"] ?? "Admin";
                 </article>
 
             </div>
-
         </section>
 
     </main>

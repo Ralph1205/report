@@ -638,3 +638,239 @@ th {
     grid-template-columns: 1fr;
   }
 }
+
+/* ==========================================
+   MANAGE ROAD REPORT PAGE
+   Scoped to update_status.php form only
+========================================== */
+
+body:has(form[action*="update_status.php"]) {
+  background: #f3f7f8;
+}
+
+body:has(form[action*="update_status.php"]) .container {
+  width: min(760px, 92%);
+  margin: 36px auto;
+}
+
+body:has(form[action*="update_status.php"]) .container > .card {
+  display: block;
+  width: 100%;
+  padding: 30px;
+  background: #ffffff;
+  border: 1px solid #dce7e9;
+  border-radius: 15px;
+  box-shadow: 0 8px 25px rgba(19, 65, 72, 0.07);
+}
+
+body:has(form[action*="update_status.php"]) .card:hover {
+  transform: none;
+  box-shadow: 0 8px 25px rgba(19, 65, 72, 0.07);
+}
+
+/* Page heading */
+
+body:has(form[action*="update_status.php"]) .card > h1 {
+  margin: 0 0 5px;
+  color: #183238;
+  font-size: 27px;
+  line-height: 1.35;
+}
+
+body:has(form[action*="update_status.php"]) .card > h1 + p {
+  margin: 0 0 25px;
+  color: #6b8085;
+  font-size: 13px;
+}
+
+/* Report details */
+
+body:has(form[action*="update_status.php"]) .card > h2 {
+  margin: 22px 0 12px;
+  color: #183238;
+  font-size: 19px;
+}
+
+body:has(form[action*="update_status.php"]) .card > p {
+  margin-bottom: 12px;
+  color: #52696e;
+  font-size: 14px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+
+body:has(form[action*="update_status.php"]) .card > p strong {
+  color: #244b52;
+}
+
+/* Current status badge */
+
+body:has(form[action*="update_status.php"]) .badge {
+  display: inline-block;
+  padding: 5px 11px;
+  border-radius: 20px;
+  background: #e0f3f5;
+  color: #087e8b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+body:has(form[action*="update_status.php"]) .badge.pending {
+  background: #fff0c9;
+  color: #946600;
+}
+
+body:has(form[action*="update_status.php"]) .badge.verified {
+  background: #dff1ff;
+  color: #1768a3;
+}
+
+body:has(form[action*="update_status.php"]) .badge.resolved {
+  background: #def5e6;
+  color: #207442;
+}
+
+body:has(form[action*="update_status.php"]) .badge.under-construction {
+  background: #ffead5;
+  color: #98550a;
+}
+
+body:has(form[action*="update_status.php"]) .badge.road-closed {
+  background: #ffe4e4;
+  color: #a52b2b;
+}
+
+/* Hazard photo */
+
+body:has(form[action*="update_status.php"]) .card img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 10px;
+}
+
+/* Divider */
+
+body:has(form[action*="update_status.php"]) .card hr {
+  height: 1px;
+  margin: 27px 0;
+  border: 0;
+  background: #e2ebed;
+}
+
+/* Update form */
+
+body:has(form[action*="update_status.php"]) .card form {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 9px;
+}
+
+body:has(form[action*="update_status.php"]) .card form label {
+  display: block;
+  margin: 4px 0 0;
+  color: #31545a;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* Status dropdown */
+
+body:has(form[action*="update_status.php"]) .card form select {
+  width: 100%;
+  min-height: 45px;
+  padding: 10px 12px;
+  margin-bottom: 7px;
+  border: 1px solid #d4e2e5;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #25474d;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* Notes field */
+
+body:has(form[action*="update_status.php"]) .card form textarea {
+  width: 100%;
+  min-height: 105px;
+  padding: 12px;
+  margin-bottom: 5px;
+  border: 1px solid #d4e2e5;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #25474d;
+  font-size: 14px;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+body:has(form[action*="update_status.php"]) .card form select:focus,
+body:has(form[action*="update_status.php"]) .card form textarea:focus {
+  outline: none;
+  border-color: #087e8b;
+  box-shadow: 0 0 0 3px rgba(8, 126, 139, 0.11);
+}
+
+/* Buttons */
+
+body:has(form[action*="update_status.php"]) .card form button,
+body:has(form[action*="update_status.php"]) .card form a.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 10px 17px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    transform 0.2s;
+}
+
+body:has(form[action*="update_status.php"]) .card form button {
+  background: #087e8b;
+  color: #ffffff;
+}
+
+body:has(form[action*="update_status.php"]) .card form button:hover {
+  background: #06616b;
+  transform: translateY(-1px);
+}
+
+body:has(form[action*="update_status.php"]) .card form a.btn {
+  background: #e6f5f6;
+  color: #06616b;
+}
+
+body:has(form[action*="update_status.php"]) .card form a.btn:hover {
+  background: #d0ecee;
+}
+
+/* Mobile layout */
+
+@media (max-width: 600px) {
+  body:has(form[action*="update_status.php"]) .container {
+    width: 92%;
+    margin: 24px auto;
+  }
+
+  body:has(form[action*="update_status.php"]) .container > .card {
+    padding: 22px 18px;
+  }
+
+  body:has(form[action*="update_status.php"]) .card > h1 {
+    font-size: 24px;
+  }
+
+  body:has(form[action*="update_status.php"]) .card form button,
+  body:has(form[action*="update_status.php"]) .card form a.btn {
+    width: 100%;
+  }
+}

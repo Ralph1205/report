@@ -2,7 +2,6 @@
 <?php
 
 session_start();
-
 require_once "../config/database.php";
 
 // ==============================
@@ -23,7 +22,11 @@ if (!isset($_SESSION["role"]) || $_SESSION["role"] !== "admin") {
 // VALIDATE REPORT ID
 // ==============================
 
-if (!isset($_GET["id"]) || !ctype_digit((string) $_GET["id"]) || (int) $_GET["id"] < 1) {
+if (
+    !isset($_GET["id"]) ||
+    !ctype_digit((string) $_GET["id"]) ||
+    (int) $_GET["id"] < 1
+) {
     header("Location: reports.php");
     exit;
 }
@@ -33,7 +36,6 @@ $report_id = (int) $_GET["id"];
 $message = "";
 $message_type = "";
 
-// These values must match the status names used throughout RoadAlert.
 $allowed_statuses = [
     "Pending",
     "Verified",
@@ -63,11 +65,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
     } else {
 
-        // Check that the report exists.
         $check = $conn->prepare(
-            "SELECT status
-             FROM hazard_reports
-             WHERE id = ?"
+            "SELECT status FROM hazard_reports WHERE id = ?"
         );
 
         $check->bind_param("i", $report_id);
@@ -85,7 +84,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             $old_data = $check_result->fetch_assoc();
             $old_status = $old_data["status"];
 
-            // Update the report and relevant timestamps.
             if ($new_status === "Verified") {
 
                 $stmt = $conn->prepare(
@@ -111,43 +109,57 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 );
             }
 
-            $stmt->bind_param("si", $new_status, $report_id);
+            if ($stmt) {
 
-            if ($stmt->execute()) {
+                $stmt->bind_param("si", $new_status, $report_id);
 
-                // Record the change in road history.
-                $action = $old_status . " → " . $new_status;
+                if ($stmt->execute()) {
 
-                $history = $conn->prepare(
-                    "INSERT INTO road_history
-                     (hazard_report_id, action, notes)
-                     VALUES (?, ?, ?)"
-                );
+                    $action = $old_status . " → " . $new_status;
 
-                $history->bind_param(
-                    "iss",
-                    $report_id,
-                    $action,
-                    $notes
-                );
+                    $history = $conn->prepare(
+                        "INSERT INTO road_history
+                         (hazard_report_id, action, notes)
+                         VALUES (?, ?, ?)"
+                    );
 
-                if ($history->execute()) {
-                    $message = "Report status updated successfully.";
-                    $message_type = "success";
+                    if ($history) {
+
+                        $history->bind_param(
+                            "iss",
+                            $report_id,
+                            $action,
+                            $notes
+                        );
+
+                        if ($history->execute()) {
+                            $message = "Report status updated successfully.";
+                            $message_type = "success";
+                        } else {
+                            $message = "Status updated, but the history entry could not be saved.";
+                            $message_type = "error";
+                        }
+
+                        $history->close();
+
+                    } else {
+                        $message = "Status updated, but the history query could not be prepared.";
+                        $message_type = "error";
+                    }
+
                 } else {
-                    $message = "Status updated, but the history entry could not be saved.";
+
+                    $message = "Failed to update report status.";
                     $message_type = "error";
                 }
 
-                $history->close();
+                $stmt->close();
 
             } else {
 
-                $message = "Failed to update report status.";
+                $message = "Unable to prepare the status update.";
                 $message_type = "error";
             }
-
-            $stmt->close();
         }
 
         $check->close();
@@ -184,7 +196,6 @@ $report = $result->fetch_assoc();
 $stmt->close();
 
 $current_status = $report["status"] ?? "Pending";
-
 $photo = $report["photo"] ?? "";
 
 $valid_photo = (
@@ -211,108 +222,510 @@ $status_class = strtolower(
     <title>Manage Report - RoadAlert</title>
 
     <link rel="stylesheet" href="../assets/css/style.css">
+
+    <style>
+        :root {
+            --ra-primary: #087f8c;
+            --ra-primary-dark: #066672;
+            --ra-bg: #f2f7f8;
+            --ra-card: #ffffff;
+            --ra-text: #20343d;
+            --ra-muted: #70828b;
+            --ra-border: #e0e9ec;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: var(--ra-bg);
+            color: var(--ra-text);
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        /* NAVIGATION */
+
+        .topbar {
+            min-height: 70px;
+            padding: 0 6%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            background: #ffffff;
+            border-bottom: 1px solid var(--ra-border);
+        }
+
+        .brand {
+            color: var(--ra-primary);
+            font-size: 23px;
+            font-weight: 800;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .brand span {
+            color: #263f49;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .nav-links a {
+            color: #455c65;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--ra-primary);
+        }
+
+        /* MAIN LAYOUT */
+
+        .container {
+            width: min(900px, 92%);
+            margin: 42px auto;
+        }
+
+        .page-heading {
+            margin-bottom: 24px;
+        }
+
+        .page-heading h1 {
+            margin: 0 0 8px;
+            font-size: clamp(25px, 4vw, 32px);
+            letter-spacing: -0.7px;
+        }
+
+        .page-heading p {
+            margin: 0;
+            color: var(--ra-muted);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .card {
+            padding: clamp(22px, 4vw, 38px);
+            background: var(--ra-card);
+            border: 1px solid var(--ra-border);
+            border-radius: 18px;
+            box-shadow: 0 12px 35px rgba(29, 68, 78, 0.07);
+        }
+
+        .section-title {
+            margin: 0 0 20px;
+            font-size: 18px;
+            font-weight: 750;
+        }
+
+        .section-subtitle {
+            margin: -10px 0 22px;
+            color: var(--ra-muted);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        /* ALERT MESSAGES */
+
+        .alert {
+            margin-bottom: 24px;
+            padding: 15px 17px;
+            border-radius: 10px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .alert.success {
+            color: #17683b;
+            background: #e8f7ed;
+            border: 1px solid #c3e8ce;
+        }
+
+        .alert.error {
+            color: #a52b24;
+            background: #fff0ef;
+            border: 1px solid #f2ceca;
+        }
+
+        /* REPORT INFORMATION */
+
+        .report-info {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+        }
+
+        .info-item {
+            min-width: 0;
+            padding: 16px;
+            background: #f7fafb;
+            border: 1px solid #edf1f3;
+            border-radius: 11px;
+        }
+
+        .info-item.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .info-label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--ra-muted);
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+        }
+
+        .info-value {
+            overflow-wrap: anywhere;
+            color: var(--ra-text);
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 7px 12px;
+            border-radius: 30px;
+            background: #edf1f3;
+            color: #52636b;
+            font-size: 12px;
+            font-weight: 750;
+        }
+
+        .status-badge.pending {
+            background: #fff4d8;
+            color: #916300;
+        }
+
+        .status-badge.verified {
+            background: #e2f2ff;
+            color: #1768a3;
+        }
+
+        .status-badge.resolved {
+            background: #e2f6e9;
+            color: #217343;
+        }
+
+        .status-badge.under-construction {
+            background: #fff0db;
+            color: #99570b;
+        }
+
+        .status-badge.road-closed {
+            background: #ffe5e5;
+            color: #a52b2b;
+        }
+
+        .hazard-photo {
+            display: block;
+            width: 100%;
+            max-width: 600px;
+            max-height: 400px;
+            margin-top: 8px;
+            object-fit: contain;
+            object-position: left center;
+            background: #f7fafb;
+            border: 1px solid var(--ra-border);
+            border-radius: 12px;
+        }
+
+        /* DIVIDER */
+
+        .section-divider {
+            height: 1px;
+            margin: 32px 0;
+            border: 0;
+            background: var(--ra-border);
+        }
+
+        /* UPDATE FORM */
+
+        .update-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 9px;
+        }
+
+        .form-group label {
+            color: var(--ra-text);
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .form-group select,
+        .form-group textarea {
+            display: block;
+            width: 100%;
+            padding: 14px 15px;
+            border: 1px solid #d7e2e6;
+            border-radius: 10px;
+            background: #ffffff;
+            color: var(--ra-text);
+            font: inherit;
+            font-size: 14px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-group select {
+            min-height: 49px;
+            cursor: pointer;
+        }
+
+        .form-group textarea {
+            min-height: 125px;
+            resize: vertical;
+            line-height: 1.6;
+        }
+
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--ra-primary);
+            box-shadow: 0 0 0 3px rgba(8, 127, 140, 0.12);
+        }
+
+        .form-help {
+            margin: 0;
+            color: var(--ra-muted);
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        /* BUTTONS */
+
+        .form-actions {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 12px;
+            margin-top: 4px;
+        }
+
+        .btn {
+            display: inline-flex;
+            min-height: 46px;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 20px;
+            border: 1px solid transparent;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 750;
+            text-align: center;
+            text-decoration: none;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--ra-primary);
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            background: var(--ra-primary-dark);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #eaf5f6;
+            border-color: #d9edef;
+            color: var(--ra-primary-dark);
+        }
+
+        .btn-secondary:hover {
+            background: #dceff1;
+        }
+
+        /* MOBILE */
+
+        @media (max-width: 650px) {
+            .topbar {
+                padding: 16px 5%;
+                align-items: flex-start;
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .nav-links {
+                width: 100%;
+                flex-wrap: wrap;
+                gap: 15px;
+            }
+
+            .container {
+                margin: 25px auto;
+            }
+
+            .report-info {
+                grid-template-columns: 1fr;
+            }
+
+            .info-item.full-width {
+                grid-column: auto;
+            }
+
+            .form-actions {
+                align-items: stretch;
+                flex-direction: column;
+            }
+
+            .form-actions .btn {
+                width: 100%;
+            }
+        }
+    </style>
 </head>
 
 <body>
 
-    <!-- ADMIN NAVIGATION -->
+<header class="topbar">
 
-    <header class="topbar">
+    <a class="brand" href="dashboard.php">
+        Road<span>Alert</span>
+    </a>
 
-        <a class="brand" href="dashboard.php">
-            Road<span>Alert</span>
-        </a>
+    <nav class="nav-links">
+        <a href="dashboard.php">Admin Dashboard</a>
+        <a href="reports.php">Reports</a>
+        <a href="map.php">Road Map</a>
+        <a href="../logout.php">Logout</a>
+    </nav>
 
-        <nav class="nav-links">
-            <a href="dashboard.php">Admin Dashboard</a>
-            <a href="reports.php">Reports</a>
-            <a href="map.php">Road Map</a>
-            <a href="../logout.php">Logout</a>
-        </nav>
+</header>
 
-    </header>
+<main class="container">
 
-    <!-- REPORT DETAILS -->
+    <div class="page-heading">
+        <h1>Manage Road Report</h1>
+        <p>
+            Review the reported road hazard and update its current status.
+        </p>
+    </div>
 
-    <main class="container">
+    <section class="card">
 
-        <section class="card">
+        <?php if ($message !== ""): ?>
+            <div
+                class="alert <?= htmlspecialchars($message_type, ENT_QUOTES, "UTF-8") ?>"
+                role="status"
+            >
+                <?= htmlspecialchars($message, ENT_QUOTES, "UTF-8") ?>
+            </div>
+        <?php endif; ?>
 
-            <h1>Manage Road Report</h1>
+        <!-- REPORT INFORMATION -->
 
-            <p>
-                Review the report details before changing its status.
-            </p>
+        <h2 class="section-title">Report Information</h2>
 
-            <br>
+        <p class="section-subtitle">
+            Details submitted by the resident.
+        </p>
 
-            <?php if ($message !== ""): ?>
-                <div class="alert <?= htmlspecialchars($message_type, ENT_QUOTES, "UTF-8") ?>">
-                    <?= htmlspecialchars($message, ENT_QUOTES, "UTF-8") ?>
+        <div class="report-info">
+
+            <div class="info-item">
+                <span class="info-label">Resident</span>
+                <div class="info-value">
+                    <?= htmlspecialchars($report["full_name"] ?? "", ENT_QUOTES, "UTF-8") ?>
                 </div>
-            <?php endif; ?>
+            </div>
 
-            <h2>Report Information</h2>
+            <div class="info-item">
+                <span class="info-label">Username</span>
+                <div class="info-value">
+                    <?= htmlspecialchars($report["username"] ?? "", ENT_QUOTES, "UTF-8") ?>
+                </div>
+            </div>
 
-            <p>
-                <strong>Resident:</strong>
-                <?= htmlspecialchars($report["full_name"] ?? "", ENT_QUOTES, "UTF-8") ?>
-            </p>
+            <div class="info-item">
+                <span class="info-label">Hazard Type</span>
+                <div class="info-value">
+                    <?= htmlspecialchars($report["hazard_type"] ?? "", ENT_QUOTES, "UTF-8") ?>
+                </div>
+            </div>
 
-            <p>
-                <strong>Username:</strong>
-                <?= htmlspecialchars($report["username"] ?? "", ENT_QUOTES, "UTF-8") ?>
-            </p>
+            <div class="info-item">
+                <span class="info-label">Current Status</span>
+                <div class="info-value">
+                    <span class="status-badge <?= htmlspecialchars($status_class, ENT_QUOTES, "UTF-8") ?>">
+                        <?= htmlspecialchars($current_status, ENT_QUOTES, "UTF-8") ?>
+                    </span>
+                </div>
+            </div>
 
-            <p>
-                <strong>Hazard Type:</strong>
-                <?= htmlspecialchars($report["hazard_type"] ?? "", ENT_QUOTES, "UTF-8") ?>
-            </p>
+            <div class="info-item full-width">
+                <span class="info-label">Location</span>
+                <div class="info-value">
+                    <?= htmlspecialchars($report["location"] ?? "", ENT_QUOTES, "UTF-8") ?>
+                </div>
+            </div>
 
-            <p>
-                <strong>Location:</strong>
-                <?= htmlspecialchars($report["location"] ?? "", ENT_QUOTES, "UTF-8") ?>
-            </p>
-
-            <p>
-                <strong>Description:</strong><br>
-                <?= nl2br(htmlspecialchars($report["description"] ?? "", ENT_QUOTES, "UTF-8")) ?>
-            </p>
-
-            <p>
-                <strong>Current Status:</strong>
-
-                <span class="badge <?= htmlspecialchars($status_class, ENT_QUOTES, "UTF-8") ?>">
-                    <?= htmlspecialchars($current_status, ENT_QUOTES, "UTF-8") ?>
-                </span>
-            </p>
+            <div class="info-item full-width">
+                <span class="info-label">Description</span>
+                <div class="info-value">
+                    <?= nl2br(htmlspecialchars($report["description"] ?? "", ENT_QUOTES, "UTF-8")) ?>
+                </div>
+            </div>
 
             <?php if ($valid_photo): ?>
 
-                <p><strong>Hazard Photo:</strong></p>
+                <div class="info-item full-width">
+                    <span class="info-label">Hazard Photo</span>
 
-                <a
-                    href="../assets/uploads/<?= rawurlencode($photo) ?>"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                >
-                    <img
-                        src="../assets/uploads/<?= rawurlencode($photo) ?>"
-                        alt="Road hazard photo"
-                        style="width: 100%; max-width: 600px; border-radius: 12px;"
+                    <a
+                        href="../assets/uploads/<?= rawurlencode($photo) ?>"
+                        target="_blank"
+                        rel="noopener noreferrer"
                     >
-                </a>
+                        <img
+                            class="hazard-photo"
+                            src="../assets/uploads/<?= rawurlencode($photo) ?>"
+                            alt="Road hazard photo"
+                        >
+                    </a>
+                </div>
 
             <?php endif; ?>
 
-            <hr>
+        </div>
 
-            <br>
+        <hr class="section-divider">
 
-            <h2>Update Status</h2>
+        <!-- UPDATE STATUS FORM -->
 
-            <form method="POST" action="update_status.php?id=<?= $report_id ?>">
+        <h2 class="section-title">Update Report Status</h2>
 
+        <p class="section-subtitle">
+            Select the appropriate status and add notes about the change.
+        </p>
+
+        <form
+            class="update-form"
+            method="POST"
+            action="update_status.php?id=<?= $report_id ?>"
+        >
+
+            <div class="form-group">
                 <label for="status">New Status</label>
 
                 <select name="status" id="status" required>
@@ -330,17 +743,30 @@ $status_class = strtolower(
 
                 </select>
 
-                <label for="notes">Notes</label>
+                <p class="form-help">
+                    Choose the current condition of the reported road hazard.
+                </p>
+            </div>
+
+            <div class="form-group">
+                <label for="notes">Admin Notes</label>
 
                 <textarea
                     name="notes"
                     id="notes"
                     rows="5"
                     maxlength="5000"
-                    placeholder="Enter notes about this status change..."
+                    placeholder="Explain the status change or provide an update for the road report..."
                 ></textarea>
 
-                <button type="submit" class="btn">
+                <p class="form-help">
+                    Optional. Maximum 5,000 characters.
+                </p>
+            </div>
+
+            <div class="form-actions">
+
+                <button type="submit" class="btn btn-primary">
                     Update Status
                 </button>
 
@@ -348,11 +774,13 @@ $status_class = strtolower(
                     Back to Reports
                 </a>
 
-            </form>
+            </div>
 
-        </section>
+        </form>
 
-    </main>
+    </section>
+
+</main>
 
 </body>
 </html>

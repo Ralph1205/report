@@ -1,4 +1,3 @@
-
 <?php
 session_start();
 
@@ -14,9 +13,9 @@ $message = "";
 $message_type = "";
 
 $hazard_type = "";
+$other_hazard = "";
 $location = "";
 $description = "";
-
 $latitude_input = "";
 $longitude_input = "";
 
@@ -24,6 +23,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $user_id = (int) $_SESSION["user_id"];
 
     $hazard_type = trim($_POST["hazard_type"] ?? "");
+    $other_hazard = trim($_POST["other_hazard"] ?? "");
     $location = trim($_POST["location"] ?? "");
     $latitude_input = trim($_POST["latitude"] ?? "");
     $longitude_input = trim($_POST["longitude"] ?? "");
@@ -35,6 +35,13 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $description === ""
     ) {
         $message = "Please fill in all required fields.";
+        $message_type = "error";
+
+    } elseif (
+        $hazard_type === "Other" &&
+        $other_hazard === ""
+    ) {
+        $message = "Please specify the other type of hazard.";
         $message_type = "error";
 
     } elseif (
@@ -58,6 +65,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $longitude = (float) $longitude_input;
         $photo_name = null;
         $upload_ok = true;
+
+        // Save the custom hazard description when Other is selected
+        $hazard_type_to_save = ($hazard_type === "Other")
+            ? "Other: " . $other_hazard
+            : $hazard_type;
 
         // Handle optional photo upload
         if (
@@ -147,7 +159,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 $stmt->bind_param(
                     "issddss",
                     $user_id,
-                    $hazard_type,
+                    $hazard_type_to_save,
                     $location,
                     $latitude,
                     $longitude,
@@ -160,6 +172,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     $message_type = "success";
 
                     $hazard_type = "";
+                    $other_hazard = "";
                     $location = "";
                     $description = "";
                     $latitude_input = "";
@@ -201,11 +214,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Report Hazard - RoadAlert</title>
 
     <link rel="stylesheet" href="assets/css/style.css">
-
     <link
         rel="stylesheet"
         href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -436,7 +447,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 </header>
 
 <main class="container report-page">
-
     <div class="page-heading">
         <h1>Report a Road Hazard</h1>
         <p>
@@ -446,7 +456,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     </div>
 
     <section class="form-card">
-
         <?php if ($message !== ""): ?>
             <div
                 class="alert <?= htmlspecialchars($message_type) ?>"
@@ -461,7 +470,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             method="POST"
             enctype="multipart/form-data"
         >
-
             <div class="form-group">
                 <label for="hazard_type">Hazard Type</label>
 
@@ -490,6 +498,28 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         </option>
                     <?php endforeach; ?>
                 </select>
+            </div>
+
+            <!-- This input appears only when Other is selected -->
+            <div
+                class="form-group"
+                id="otherHazardGroup"
+                style="display: none;"
+            >
+                <label for="other_hazard">Specify Other Hazard</label>
+
+                <input
+                    type="text"
+                    id="other_hazard"
+                    name="other_hazard"
+                    placeholder="Enter the type of road hazard"
+                    value="<?= htmlspecialchars($other_hazard) ?>"
+                    maxlength="150"
+                >
+
+                <p class="field-help">
+                    Please describe the hazard type not listed above.
+                </p>
             </div>
 
             <div class="form-group">
@@ -527,7 +557,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             </div>
 
             <div class="coordinates-grid">
-
                 <div class="form-group">
                     <label for="latitude">Latitude</label>
 
@@ -555,7 +584,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                         value="<?= htmlspecialchars($longitude_input) ?>"
                     >
                 </div>
-
             </div>
 
             <div class="form-group">
@@ -594,7 +622,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     Cancel
                 </a>
             </div>
-
         </form>
     </section>
 </main>
@@ -603,6 +630,26 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+    // Show or hide the custom hazard input
+    const hazardTypeSelect = document.getElementById("hazard_type");
+    const otherHazardGroup = document.getElementById("otherHazardGroup");
+    const otherHazardInput = document.getElementById("other_hazard");
+
+    function toggleOtherHazard() {
+        const isOther = hazardTypeSelect.value === "Other";
+
+        otherHazardGroup.style.display = isOther ? "block" : "none";
+        otherHazardInput.required = isOther;
+
+        if (!isOther) {
+            otherHazardInput.value = "";
+        }
+    }
+
+    hazardTypeSelect.addEventListener("change", toggleOtherHazard);
+    toggleOtherHazard();
+
+    // Initialize the map
     const mapElement = document.getElementById("reportMap");
 
     if (!mapElement || typeof L === "undefined") {
@@ -610,6 +657,7 @@ document.addEventListener("DOMContentLoaded", function () {
             mapElement.textContent =
                 "The map could not be loaded. Please check your internet connection.";
         }
+
         return;
     }
 
@@ -647,7 +695,11 @@ document.addEventListener("DOMContentLoaded", function () {
         Math.abs(savedLatitude) <= 90 &&
         Math.abs(savedLongitude) <= 180
     ) {
-        marker = L.marker([savedLatitude, savedLongitude]).addTo(map);
+        marker = L.marker([
+            savedLatitude,
+            savedLongitude
+        ]).addTo(map);
+
         map.setView([savedLatitude, savedLongitude], 15);
         marker.bindPopup("Selected Hazard Location");
     }
