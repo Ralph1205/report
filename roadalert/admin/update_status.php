@@ -1,22 +1,29 @@
+
 <?php
 
 session_start();
 
 require_once "../config/database.php";
 
-// Make sure the user is logged in
+// ==============================
+// LOGIN AND ADMIN CHECK
+// ==============================
+
 if (!isset($_SESSION["user_id"])) {
     header("Location: ../login.php");
     exit;
 }
 
-// Only admins can access this page
-if ($_SESSION["role"] !== "admin") {
+if (!isset($_SESSION["role"]) || $_SESSION["role"] !== "admin") {
     header("Location: ../dashboard.php");
     exit;
 }
 
-if (!isset($_GET["id"]) || !is_numeric($_GET["id"])) {
+// ==============================
+// VALIDATE REPORT ID
+// ==============================
+
+if (!isset($_GET["id"]) || !ctype_digit((string) $_GET["id"]) || (int) $_GET["id"] < 1) {
     header("Location: reports.php");
     exit;
 }
@@ -26,37 +33,44 @@ $report_id = (int) $_GET["id"];
 $message = "";
 $message_type = "";
 
-// Update status
+// These values must match the status names used throughout RoadAlert.
+$allowed_statuses = [
+    "Pending",
+    "Verified",
+    "Resolved",
+    "Under Construction",
+    "Road Closed"
+];
+
+// ==============================
+// UPDATE STATUS
+// ==============================
+
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
-    $new_status = $_POST["status"] ?? "";
+    $new_status = trim($_POST["status"] ?? "");
     $notes = trim($_POST["notes"] ?? "");
 
-    $allowed_statuses = [
-        "Pending",
-        "Verified",
-        "Resolved"
-    ];
+    if (!in_array($new_status, $allowed_statuses, true)) {
 
-    if (!in_array($new_status, $allowed_statuses)) {
+        $message = "Invalid status selected.";
+        $message_type = "error";
 
-        $message = "Invalid status.";
+    } elseif (strlen($notes) > 5000) {
+
+        $message = "Notes must not exceed 5000 characters.";
         $message_type = "error";
 
     } else {
 
-        // Get the current report status
+        // Check that the report exists.
         $check = $conn->prepare(
             "SELECT status
              FROM hazard_reports
              WHERE id = ?"
         );
 
-        $check->bind_param(
-            "i",
-            $report_id
-        );
-
+        $check->bind_param("i", $report_id);
         $check->execute();
 
         $check_result = $check->get_result();
@@ -69,16 +83,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         } else {
 
             $old_data = $check_result->fetch_assoc();
-
             $old_status = $old_data["status"];
 
-            // Update the report
+            // Update the report and relevant timestamps.
             if ($new_status === "Verified") {
 
                 $stmt = $conn->prepare(
                     "UPDATE hazard_reports
-                     SET status = ?,
-                         verified_at = NOW()
+                     SET status = ?, verified_at = NOW()
                      WHERE id = ?"
                 );
 
@@ -86,8 +98,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
                 $stmt = $conn->prepare(
                     "UPDATE hazard_reports
-                     SET status = ?,
-                         resolved_at = NOW()
+                     SET status = ?, resolved_at = NOW()
                      WHERE id = ?"
                 );
 
@@ -100,26 +111,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 );
             }
 
-            $stmt->bind_param(
-                "si",
-                $new_status,
-                $report_id
-            );
+            $stmt->bind_param("si", $new_status, $report_id);
 
             if ($stmt->execute()) {
 
-                // Save the action in road history
-                $action =
-                    $old_status . " → " . $new_status;
+                // Record the change in road history.
+                $action = $old_status . " → " . $new_status;
 
                 $history = $conn->prepare(
                     "INSERT INTO road_history
-                    (
-                        hazard_report_id,
-                        action,
-                        notes
-                    )
-                    VALUES (?, ?, ?)"
+                     (hazard_report_id, action, notes)
+                     VALUES (?, ?, ?)"
                 );
 
                 $history->bind_param(
@@ -129,20 +131,19 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     $notes
                 );
 
-                $history->execute();
+                if ($history->execute()) {
+                    $message = "Report status updated successfully.";
+                    $message_type = "success";
+                } else {
+                    $message = "Status updated, but the history entry could not be saved.";
+                    $message_type = "error";
+                }
 
                 $history->close();
 
-                $message =
-                    "Report status updated successfully.";
-
-                $message_type = "success";
-
             } else {
 
-                $message =
-                    "Failed to update report.";
-
+                $message = "Failed to update report status.";
                 $message_type = "error";
             }
 
@@ -153,8 +154,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 }
 
+// ==============================
+// GET REPORT INFORMATION
+// ==============================
 
-// Get report information
 $stmt = $conn->prepare(
     "SELECT
         hazard_reports.*,
@@ -166,22 +169,35 @@ $stmt = $conn->prepare(
      WHERE hazard_reports.id = ?"
 );
 
-$stmt->bind_param(
-    "i",
-    $report_id
-);
-
+$stmt->bind_param("i", $report_id);
 $stmt->execute();
 
 $result = $stmt->get_result();
 
 if ($result->num_rows === 0) {
-
+    $stmt->close();
     echo "Report not found.";
     exit;
 }
 
 $report = $result->fetch_assoc();
+$stmt->close();
+
+$current_status = $report["status"] ?? "Pending";
+
+$photo = $report["photo"] ?? "";
+
+$valid_photo = (
+    $photo !== "" &&
+    preg_match(
+        '/\A[a-zA-Z0-9_-]+\.(jpg|jpeg|png|webp)\z/i',
+        $photo
+    )
+);
+
+$status_class = strtolower(
+    str_replace(" ", "-", $current_status)
+);
 
 ?>
 
@@ -189,273 +205,154 @@ $report = $result->fetch_assoc();
 <html lang="en">
 
 <head>
-
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <title>Manage Report - RoadAlert</title>
 
-    <link
-        rel="stylesheet"
-        href="../assets/css/style.css"
-    >
-
+    <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 
 <body>
 
-<header class="navbar">
+    <!-- ADMIN NAVIGATION -->
 
-    <div class="logo">
-        Road<span>Alert</span> + FuelTrack
-    </div>
+    <header class="topbar">
 
-    <div class="nav-links">
-
-        <a href="dashboard.php">
-            Dashboard
+        <a class="brand" href="dashboard.php">
+            Road<span>Alert</span>
         </a>
 
-        <a href="reports.php">
-            Reports
-        </a>
+        <nav class="nav-links">
+            <a href="dashboard.php">Admin Dashboard</a>
+            <a href="reports.php">Reports</a>
+            <a href="map.php">Road Map</a>
+            <a href="../logout.php">Logout</a>
+        </nav>
 
-        <a href="../logout.php">
-            Logout
-        </a>
+    </header>
 
-    </div>
+    <!-- REPORT DETAILS -->
 
-</header>
+    <main class="container">
 
+        <section class="card">
 
-<div class="form-container">
-
-    <div class="card">
-
-        <h1>
-            Manage Road Report
-        </h1>
-
-        <p>
-            Review the report before changing its status.
-        </p>
-
-        <br>
-
-
-        <?php if ($message !== ""): ?>
-
-            <div class="alert <?= $message_type ?>">
-                <?= htmlspecialchars($message) ?>
-            </div>
-
-        <?php endif; ?>
-
-
-        <h2>
-            Report Information
-        </h2>
-
-
-        <p>
-            <strong>Resident:</strong>
-
-            <?= htmlspecialchars(
-                $report["full_name"]
-            ) ?>
-        </p>
-
-        <br>
-
-
-        <p>
-            <strong>Username:</strong>
-
-            <?= htmlspecialchars(
-                $report["username"]
-            ) ?>
-        </p>
-
-        <br>
-
-
-        <p>
-            <strong>Hazard Type:</strong>
-
-            <?= htmlspecialchars(
-                $report["hazard_type"]
-            ) ?>
-        </p>
-
-        <br>
-
-
-        <p>
-            <strong>Location:</strong>
-
-            <?= htmlspecialchars(
-                $report["location"]
-            ) ?>
-        </p>
-
-        <br>
-
-
-        <p>
-            <strong>Description:</strong>
-
-            <?= nl2br(
-                htmlspecialchars(
-                    $report["description"]
-                )
-            ) ?>
-        </p>
-
-        <br>
-
-
-        <p>
-            <strong>Current Status:</strong>
-
-            <span class="badge <?= strtolower(
-                $report["status"]
-            ) ?>">
-                <?= htmlspecialchars(
-                    $report["status"]
-                ) ?>
-            </span>
-        </p>
-
-        <br>
-
-
-        <?php if (!empty($report["photo"])): ?>
+            <h1>Manage Road Report</h1>
 
             <p>
-                <strong>Photo:</strong>
+                Review the report details before changing its status.
             </p>
 
             <br>
 
-            <img
-                src="../assets/uploads/<?= htmlspecialchars($report["photo"]) ?>"
-                alt="Road hazard photo"
-                style="
-                    width: 100%;
-                    max-width: 600px;
-                    border-radius: 12px;
-                "
-            >
+            <?php if ($message !== ""): ?>
+                <div class="alert <?= htmlspecialchars($message_type, ENT_QUOTES, "UTF-8") ?>">
+                    <?= htmlspecialchars($message, ENT_QUOTES, "UTF-8") ?>
+                </div>
+            <?php endif; ?>
+
+            <h2>Report Information</h2>
+
+            <p>
+                <strong>Resident:</strong>
+                <?= htmlspecialchars($report["full_name"] ?? "", ENT_QUOTES, "UTF-8") ?>
+            </p>
+
+            <p>
+                <strong>Username:</strong>
+                <?= htmlspecialchars($report["username"] ?? "", ENT_QUOTES, "UTF-8") ?>
+            </p>
+
+            <p>
+                <strong>Hazard Type:</strong>
+                <?= htmlspecialchars($report["hazard_type"] ?? "", ENT_QUOTES, "UTF-8") ?>
+            </p>
+
+            <p>
+                <strong>Location:</strong>
+                <?= htmlspecialchars($report["location"] ?? "", ENT_QUOTES, "UTF-8") ?>
+            </p>
+
+            <p>
+                <strong>Description:</strong><br>
+                <?= nl2br(htmlspecialchars($report["description"] ?? "", ENT_QUOTES, "UTF-8")) ?>
+            </p>
+
+            <p>
+                <strong>Current Status:</strong>
+
+                <span class="badge <?= htmlspecialchars($status_class, ENT_QUOTES, "UTF-8") ?>">
+                    <?= htmlspecialchars($current_status, ENT_QUOTES, "UTF-8") ?>
+                </span>
+            </p>
+
+            <?php if ($valid_photo): ?>
+
+                <p><strong>Hazard Photo:</strong></p>
+
+                <a
+                    href="../assets/uploads/<?= rawurlencode($photo) ?>"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
+                    <img
+                        src="../assets/uploads/<?= rawurlencode($photo) ?>"
+                        alt="Road hazard photo"
+                        style="width: 100%; max-width: 600px; border-radius: 12px;"
+                    >
+                </a>
+
+            <?php endif; ?>
+
+            <hr>
 
             <br>
-            <br>
 
-        <?php endif; ?>
+            <h2>Update Status</h2>
 
+            <form method="POST" action="update_status.php?id=<?= $report_id ?>">
 
-        <hr>
+                <label for="status">New Status</label>
 
-        <br>
+                <select name="status" id="status" required>
 
+                    <?php foreach ($allowed_statuses as $status): ?>
 
-        <h2>
-            Update Status
-        </h2>
+                        <option
+                            value="<?= htmlspecialchars($status, ENT_QUOTES, "UTF-8") ?>"
+                            <?= $current_status === $status ? "selected" : "" ?>
+                        >
+                            <?= htmlspecialchars($status, ENT_QUOTES, "UTF-8") ?>
+                        </option>
 
-        <form method="POST">
+                    <?php endforeach; ?>
 
-            <label>
-                New Status
-            </label>
+                </select>
 
-            <select
-                name="status"
-                required
-            >
+                <label for="notes">Notes</label>
 
-                <option
-                    value="Pending"
-                    <?= $report["status"] === "Pending"
-                        ? "selected"
-                        : "" ?>
-                >
-                    Pending
-                </option>
+                <textarea
+                    name="notes"
+                    id="notes"
+                    rows="5"
+                    maxlength="5000"
+                    placeholder="Enter notes about this status change..."
+                ></textarea>
 
-                <option
-                    value="Verified"
-                    <?= $report["status"] === "Verified"
-                        ? "selected"
-                        : "" ?>
-                >
-                    Verified
-                </option>
+                <button type="submit" class="btn">
+                    Update Status
+                </button>
 
-                <option
-                    value="Resolved"
-                    <?= $report["status"] === "Resolved"
-                        ? "selected"
-                        : "" ?>
-                >
-                    Resolved
-                </option>
+                <a href="reports.php" class="btn btn-secondary">
+                    Back to Reports
+                </a>
 
+            </form>
 
-                <option
-                    value="Underconstruction"
-                    <?= $report["status"] === "Underconstruction"
-                        ? "selected"
-                        : "" ?>
-                >
-                    Under Construction
-                </option>
+        </section>
 
-
-                <option
-                    value="roadclosed"
-                    <?= $report["status"] === "roadclosed"
-                        ? "selected"
-                        : "" ?>
-                >
-                    Road Closed
-                </option>
-
-            </select>
-
-
-            <label>
-                Notes
-            </label>
-
-            <textarea
-                name="notes"
-                rows="5"
-                placeholder="Enter notes about this status change..."
-            ></textarea>
-
-
-            <button type="submit">
-                Update Status
-            </button>
-
-            <a
-                href="reports.php"
-                class="btn btn-secondary"
-            >
-                Back to Reports
-            </a>
-
-        </form>
-
-    </div>
-
-</div>
+    </main>
 
 </body>
-
 </html>

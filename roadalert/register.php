@@ -142,7 +142,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         content="width=device-width, initial-scale=1.0"
     >
 
-    <title>Create Account - RoadAlert + FuelTrack</title>
+    <title>Create Account - RoadAlert</title>
 
     <link
         rel="stylesheet"
@@ -156,16 +156,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <header class="navbar">
 
     <div class="logo">
-        Road<span>Alert</span> + FuelTrack
+        Road<span>Alert</span>
     </div>
 
-    <div class="nav-links">
+    
 
-        <a href="index.php">Home</a>
 
-        <a href="login.php">Login</a>
-
-    </div>
 
 </header>
 
@@ -176,7 +172,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         <h1>Create Account</h1>
 
         <p>
-            Register as a RoadAlert + FuelTrack resident.
+            Register as a RoadAlert resident.
         </p>
 
         <br>

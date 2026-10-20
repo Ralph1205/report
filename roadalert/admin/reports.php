@@ -1,20 +1,31 @@
+
 <?php
 
 session_start();
 
 require_once "../config/database.php";
 
-// Make sure the user is logged in
+// ==============================
+// LOGIN CHECK
+// ==============================
+
 if (!isset($_SESSION["user_id"])) {
     header("Location: ../login.php");
     exit;
 }
 
-// Only admins can access this page
-if ($_SESSION["role"] !== "admin") {
+// ==============================
+// ADMIN CHECK
+// ==============================
+
+if (!isset($_SESSION["role"]) || $_SESSION["role"] !== "admin") {
     header("Location: ../dashboard.php");
     exit;
 }
+
+// ==============================
+// GET ALL HAZARD REPORTS
+// ==============================
 
 $sql = "
     SELECT
@@ -43,255 +54,247 @@ $result = $conn->query($sql);
 <html lang="en">
 
 <head>
-
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <title>Road Reports - Admin | RoadAlert</title>
 
-    <title>Road Reports - Admin</title>
-
-    <link
-        rel="stylesheet"
-        href="../assets/css/style.css"
-    >
-
+    <link rel="stylesheet" href="../assets/css/style.css">
 </head>
 
 <body>
 
-<header class="navbar">
+    <!-- ADMIN NAVIGATION -->
 
-    <div class="logo">
-        Road<span>Alert</span> + FuelTrack
-    </div>
+    <header class="topbar">
 
-    <div class="nav-links">
-
-        <a href="dashboard.php">
-            Dashboard
+        <a class="brand" href="dashboard.php">
+            Road<span>Alert</span>
         </a>
 
-        <a href="reports.php">
-            Reports
-        </a>
+        <nav class="nav-links">
+            <a href="dashboard.php">Admin Dashboard</a>
+            <a href="reports.php">Reports</a>
+            <a href="map.php">Road Map</a>
+            <a href="../logout.php">Logout</a>
+        </nav>
 
-        <a href="../logout.php">
-            Logout
-        </a>
+    </header>
 
-    </div>
+    <!-- MAIN CONTENT -->
 
-</header>
+    <main class="container">
 
-
-<div class="container">
-
-    <div class="card">
-
-        <h1>
-            Road Hazard Reports
-        </h1>
-
-        <p>
-            Review reports submitted by residents.
-        </p>
-
-    </div>
-
-
-    <div class="card">
-
-        <?php if ($result->num_rows === 0): ?>
-
-            <h2>
-                No Reports
-            </h2>
+        <section class="card">
+            <h1>Road Hazard Reports</h1>
 
             <p>
-                There are currently no road hazard reports.
+                Review reports submitted by residents
+                and manage their current status.
             </p>
+        </section>
 
-        <?php else: ?>
+        <section class="card">
 
-            <table>
+            <?php if (!$result): ?>
 
-                <thead>
+                <h2>Unable to Load Reports</h2>
 
-                    <tr>
+                <p>
+                    There was a problem retrieving reports.
+                    Please check your database connection.
+                </p>
 
-                        <th>
-                            Resident
-                        </th>
+            <?php elseif ($result->num_rows === 0): ?>
 
-                        <th>
-                            Hazard
-                        </th>
+                <h2>No Reports</h2>
 
-                        <th>
-                            Location
-                        </th>
+                <p>
+                    There are currently no road hazard reports.
+                </p>
 
-                        <th>
-                            Photo
-                        </th>
+            <?php else: ?>
 
-                        <th>
-                            Status
-                        </th>
+                <div style="overflow-x: auto;">
 
-                        <th>
-                            Date
-                        </th>
+                    <table>
 
-                        <th>
-                            Action
-                        </th>
+                        <thead>
+                            <tr>
+                                <th>Resident</th>
+                                <th>Hazard</th>
+                                <th>Location</th>
+                                <th>Photo</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
 
-                    </tr>
+                        <tbody>
 
-                </thead>
+                            <?php while ($report = $result->fetch_assoc()): ?>
 
-                <tbody>
+                                <?php
+                                $status = $report["status"];
 
-                <?php while ($report = $result->fetch_assoc()): ?>
-
-                    <tr>
-
-                        <td>
-
-                            <?= htmlspecialchars(
-                                $report["full_name"]
-                            ) ?>
-
-                            <br>
-
-                            <small>
-                                @<?= htmlspecialchars(
-                                    $report["username"]
-                                ) ?>
-                            </small>
-
-                        </td>
-
-
-                        <td>
-
-                            <?= htmlspecialchars(
-                                $report["hazard_type"]
-                            ) ?>
-
-                        </td>
-
-
-                        <td>
-
-                            <?= htmlspecialchars(
-                                $report["location"]
-                            ) ?>
-
-                            <?php if (
-                                $report["latitude"] !== null &&
-                                $report["longitude"] !== null
-                            ): ?>
-
-                                <br>
-
-                                <small>
-                                    <?= htmlspecialchars(
-                                        $report["latitude"]
-                                    ) ?>,
-                                    <?= htmlspecialchars(
-                                        $report["longitude"]
-                                    ) ?>
-                                </small>
-
-                            <?php endif; ?>
-
-                        </td>
-
-
-                        <td>
-
-                            <?php if (
-                                !empty($report["photo"])
-                            ): ?>
-
-                                <a
-                                    href="../assets/uploads/<?= htmlspecialchars($report["photo"]) ?>"
-                                    target="_blank"
-                                >
-                                    View Photo
-                                </a>
-
-                            <?php else: ?>
-
-                                No photo
-
-                            <?php endif; ?>
-
-                        </td>
-
-
-                        <td>
-
-                            <?php
-                            $status_class =
-                                strtolower(
-                                    $report["status"]
+                                $status_class = strtolower(
+                                    str_replace(" ", "-", $status)
                                 );
-                            ?>
 
-                            <span
-                                class="badge <?= htmlspecialchars($status_class) ?>"
-                            >
-                                <?= htmlspecialchars(
-                                    $report["status"]
-                                ) ?>
-                            </span>
+                                $photo = $report["photo"] ?? "";
 
-                        </td>
+                                $valid_photo = (
+                                    $photo !== "" &&
+                                    preg_match(
+                                        '/\A[a-zA-Z0-9_-]+\.(jpg|jpeg|png|webp)\z/i',
+                                        $photo
+                                    )
+                                );
+                                ?>
 
+                                <tr>
 
-                        <td>
+                                    <!-- RESIDENT -->
 
-                            <?= date(
-                                "M d, Y",
-                                strtotime(
-                                    $report["created_at"]
-                                )
-                            ) ?>
+                                    <td>
+                                        <?= htmlspecialchars(
+                                            $report["full_name"] ?? "Unknown",
+                                            ENT_QUOTES,
+                                            "UTF-8"
+                                        ) ?>
 
-                        </td>
+                                        <br>
 
+                                        <small>
+                                            @<?= htmlspecialchars(
+                                                $report["username"] ?? "",
+                                                ENT_QUOTES,
+                                                "UTF-8"
+                                            ) ?>
+                                        </small>
+                                    </td>
 
-                        <td>
+                                    <!-- HAZARD TYPE -->
 
-                            <a
-                                href="update_status.php?id=<?= $report["id"] ?>"
-                                class="btn"
-                            >
-                                Manage
-                            </a>
+                                    <td>
+                                        <?= htmlspecialchars(
+                                            $report["hazard_type"] ?? "",
+                                            ENT_QUOTES,
+                                            "UTF-8"
+                                        ) ?>
+                                    </td>
 
-                        </td>
+                                    <!-- LOCATION -->
 
-                    </tr>
+                                    <td>
+                                        <?= htmlspecialchars(
+                                            $report["location"] ?? "",
+                                            ENT_QUOTES,
+                                            "UTF-8"
+                                        ) ?>
 
-                <?php endwhile; ?>
+                                        <?php if (
+                                            $report["latitude"] !== null &&
+                                            $report["longitude"] !== null &&
+                                            $report["latitude"] !== "" &&
+                                            $report["longitude"] !== ""
+                                        ): ?>
 
-                </tbody>
+                                            <br>
 
-            </table>
+                                            <small>
+                                                <?= htmlspecialchars(
+                                                    (string) $report["latitude"],
+                                                    ENT_QUOTES,
+                                                    "UTF-8"
+                                                ) ?>,
+                                                <?= htmlspecialchars(
+                                                    (string) $report["longitude"],
+                                                    ENT_QUOTES,
+                                                    "UTF-8"
+                                                ) ?>
+                                            </small>
 
-        <?php endif; ?>
+                                        <?php endif; ?>
+                                    </td>
 
-    </div>
+                                    <!-- PHOTO -->
 
-</div>
+                                    <td>
+                                        <?php if ($valid_photo): ?>
+
+                                            <a
+                                                href="../assets/uploads/<?= rawurlencode($photo) ?>"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                            >
+                                                View Photo
+                                            </a>
+
+                                        <?php else: ?>
+
+                                            No photo
+
+                                        <?php endif; ?>
+                                    </td>
+
+                                    <!-- STATUS -->
+
+                                    <td>
+                                        <span class="badge <?= htmlspecialchars(
+                                            $status_class,
+                                            ENT_QUOTES,
+                                            "UTF-8"
+                                        ) ?>">
+                                            <?= htmlspecialchars(
+                                                $status,
+                                                ENT_QUOTES,
+                                                "UTF-8"
+                                            ) ?>
+                                        </span>
+                                    </td>
+
+                                    <!-- DATE -->
+
+                                    <td>
+                                        <?php
+                                        $timestamp = strtotime(
+                                            $report["created_at"] ?? ""
+                                        );
+
+                                        echo $timestamp
+                                            ? date("M d, Y", $timestamp)
+                                            : "Unknown";
+                                        ?>
+                                    </td>
+
+                                    <!-- ACTION -->
+
+                                    <td>
+                                        <a
+                                            href="update_status.php?id=<?= (int) $report["id"] ?>"
+                                            class="btn"
+                                        >
+                                            Manage
+                                        </a>
+                                    </td>
+
+                                </tr>
+
+                            <?php endwhile; ?>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            <?php endif; ?>
+
+        </section>
+
+    </main>
 
 </body>
-
 </html>
